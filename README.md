@@ -46,131 +46,64 @@ The tool layer connects agents to structured financial data sources:
 
 The Synthesizer combines all specialist outputs into one final response. It preserves specific numbers, tickers, dates, tool results, and partial data instead of discarding incomplete but useful information.
 
-## Workflow Diagram
+## 🗺️ Architectural Workflows
 
+### 1. Baseline Agent
 ```mermaid
-graph TD
-    %% Nodes
-    A([User Input Prompt])
-    B[Streamlit UI]
-    C{Orchestrator LLM}
-
-    %% Specialists
-    D[Market Specialist]
-    E[Fundamentals Specialist]
-    F[Sentiment Specialist]
-
-    %% Tools
-    T1[(SQLite DB)]
-    T2[yfinance API]
-
-    %% Synthesizer
-    G[Synthesizer LLM]
-    H([Final Formatted Answer])
-
-    %% Flow
-    A --> B
-    B -->|Selects Multi-Agent| C
+flowchart LR
+    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
     
-    C -->|Routes to Domains| D
-    C -->|Routes to Domains| E
-    C -->|Routes to Domains| F
+    A([User Query]) --> B[Baseline LLM]
+    B --> C([Final Answer])
     
-    %% Market Tool Connections
-    D -.->|get_market_status| T2
-    D -.->|get_price_performance| T2
-    D -.->|get_top_gainers_losers| T2
-    D -.->|query_local_db| T1
-    D -.->|get_tickers_by_sector| T1
+    class A,C userNode;
+    class B agentNode;
+```
 
-    %% Fundamentals Tool Connections
-    E -.->|get_company_overview| T2
-    E -.->|get_tickers_by_sector| T1
-    E -.->|query_local_db| T1
+### 2. Single Agent
+```mermaid
+flowchart LR
+    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
 
-    %% Sentiment Tool Connections
-    F -.->|get_news_sentiment| T2
-    F -.->|query_local_db| T1
+    A([User Query]) --> B{Single LLM Agent}
+    B <-->|Tool Call / Return| C[(All 7 Financial Tools)]
+    B -->|Synthesizes| D([Final Answer])
 
-    %% Synthesis
-    D ==>|Market Context| G
-    E ==>|Fundamentals Context| G
-    F ==>|Sentiment Context| G
-    
-    G --> H
+    class A,D userNode;
+    class B agentNode;
+    class C toolNode;
+```
 
-    %% Styling
+### 3. Multi-Agent System
+```mermaid
+flowchart TD
     classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
     classDef systemNode fill:#2c3e50,stroke:#fff,stroke-width:2px,color:#fff;
     classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
     classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef outputNode fill:#8e44ad,stroke:#fff,stroke-width:2px,color:#fff;
 
-    class A userNode;
-    class B systemNode;
-    class C,D,E,F,G agentNode;
-    class T1,T2 toolNode;
-    class H outputNode;
-```
+    A([User Query]) --> B{Orchestrator}
+    
+    B -->|Routes| C[Market Specialist]
+    B -->|Routes| D[Fundamentals Specialist]
+    B -->|Routes| E[Sentiment Specialist]
 
-## Detailed Multi-Agent Flow
+    C <-->|Queries| F[(Tools & APIs)]
+    D <-->|Queries| F
+    E <-->|Queries| F
 
-```mermaid
-flowchart TD
-    A[User query] --> B[Streamlit UI]
-    B --> C[Multi-Agent selected]
-    C --> D[Orchestrator]
+    C --> G[Synthesizer]
+    D --> G
+    E --> G
 
-    D --> E{Which domains are needed?}
+    G --> H([Final Answer])
 
-    E -->|Market| F[Market Agent]
-    E -->|Fundamentals| G[Fundamentals Agent]
-    E -->|Sentiment| H[Sentiment Agent]
-
-    F --> F1[get_tickers_by_sector]
-    F --> F2[get_price_performance]
-    F --> F3[get_market_status]
-    F --> F4[get_top_gainers_losers]
-    F --> F5[query_local_db]
-
-    G --> G1[get_company_overview]
-    G --> G2[query_local_db]
-    G --> G3[get_tickers_by_sector]
-
-    H --> H1[get_news_sentiment]
-    H --> H2[query_local_db]
-
-    F1 --> I[Specialist results]
-    F2 --> I
-    F3 --> I
-    F4 --> I
-    F5 --> I
-
-    G1 --> I
-    G2 --> I
-    G3 --> I
-
-    H1 --> I
-    H2 --> I
-
-    I --> J[Synthesizer]
-    J --> K[Final answer]
-    K --> L[Streamlit displays answer, time, tools, and architecture]
-    L --> M((Done))
-```
-
-## Agent Execution Pattern
-
-Each tool-using agent follows the same loop:
-
-```mermaid
-flowchart LR
-    A[Prompt and user task] --> B[LLM reasoning]
-    B --> C{Tool call?}
-    C -->|Yes| D[Execute tool]
-    D --> E[Return structured result]
-    E --> B
-    C -->|No| F[Return AgentResult]
+    class A,H userNode;
+    class B,C,D,E,G agentNode;
+    class F toolNode;
 ```
 
 ## Why This Architecture Improves the System
@@ -191,6 +124,12 @@ This design supports the resume claims that the project improved query accuracy 
 | get_news_sentiment | Retrieves recent headlines and sentiment scores |
 | query_local_db | Runs SELECT queries against the local SQLite stock database |
 
-## Suggested Resume Description
+## ⚙️ How to Run
 
-Built an agentic financial question-answering system comparing baseline, single-agent, and multi-agent LLM architectures. Designed an orchestrator that routes user queries to Market, Fundamentals, and Sentiment specialists, each connected to financial tools backed by yfinance and a local SQLite database. Combined specialist outputs with a final synthesizer to improve answer quality, preserve numerical evidence, and reduce unnecessary LLM/API calls.
+1. **Install Dependencies**: Ensure you have `streamlit`, `yfinance`, `pandas`, and your required LLM provider client installed.
+2. **Set Environment Variables**: Configure `config.py` with your active LLM model and API keys.
+3. **Run the App**:
+   ```bash
+   streamlit run app.py
+   ```
+4. **Interact**: Select an architecture from the sidebar and ask financial questions (e.g., "What is the P/E ratio for AAPL and MSFT?", "Which tech stocks are the top gainers today?").

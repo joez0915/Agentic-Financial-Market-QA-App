@@ -182,11 +182,11 @@ Output ONLY a JSON object with key "domains" containing an array of strings from
     # Synthesizer
     synth_prompt = """You are a final synthesizer. Combine ALL useful information from the specialists into a single coherent answer.
 Rules:
+- Write a professional, human-readable response using Markdown formatting (bullet points, bold text, etc.).
 - Include ALL specific data points (numbers, tickers, percentages, dates) the specialists provided.
-- If one specialist found partial data and another found nothing, still include the partial data.
 - Only say "data unavailable" for specific fields that NO specialist could retrieve. Do not discard partial results.
-- Be comprehensive: the user should not need to re-read the specialist answers.
-- Output JSON with keys: `final_answer` (string — the full answer) and `confidence` (float 0.0–1.0)."""
+- Do NOT output raw python dictionaries or raw arrays. Format the data into readable text or markdown tables.
+- You MUST output a valid JSON object with EXACTLY two keys: "final_answer" (string containing your formatted markdown answer) and "confidence" (float 0.0-1.0)."""
 
     context = "\n\n".join([f"[{r.agent_name}]: {r.answer}" for r in agent_results])
     resp_syn = client.chat.completions.create(

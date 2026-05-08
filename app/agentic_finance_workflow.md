@@ -50,30 +50,23 @@ The Synthesizer combines all specialist outputs into one final response. It pres
 
 ```mermaid
 graph TD
-    %% Styling
-    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef systemNode fill:#2c3e50,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef outputNode fill:#8e44ad,stroke:#fff,stroke-width:2px,color:#fff;
-
     %% Nodes
-    A([User Input Prompt]) ::: userNode
-    B[Streamlit UI] ::: systemNode
-    C{Orchestrator LLM} ::: agentNode
+    A([User Input Prompt])
+    B[Streamlit UI]
+    C{Orchestrator LLM}
 
     %% Specialists
-    D[Market Specialist] ::: agentNode
-    E[Fundamentals Specialist] ::: agentNode
-    F[Sentiment Specialist] ::: agentNode
+    D[Market Specialist]
+    E[Fundamentals Specialist]
+    F[Sentiment Specialist]
 
     %% Tools
-    T1[(SQLite DB)] ::: toolNode
-    T2[yfinance API] ::: toolNode
+    T1[(SQLite DB)]
+    T2[yfinance API]
 
     %% Synthesizer
-    G[Synthesizer LLM] ::: agentNode
-    H([Final Formatted Answer]) ::: outputNode
+    G[Synthesizer LLM]
+    H([Final Formatted Answer])
 
     %% Flow
     A --> B
@@ -105,6 +98,19 @@ graph TD
     F ==>|Sentiment Context| G
     
     G --> H
+
+    %% Styling
+    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef systemNode fill:#2c3e50,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
+    classDef outputNode fill:#8e44ad,stroke:#fff,stroke-width:2px,color:#fff;
+
+    class A userNode;
+    class B systemNode;
+    class C,D,E,F,G agentNode;
+    class T1,T2 toolNode;
+    class H outputNode;
 ```
 
 ## Detailed Multi-Agent Flow

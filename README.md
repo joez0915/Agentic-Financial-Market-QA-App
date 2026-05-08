@@ -48,46 +48,52 @@ The Synthesizer combines all specialist outputs into one final response. It pres
 
 ## 🗺️ Architectural Workflows
 
+### 1. Baseline Agent
 ```mermaid
 flowchart TD
     A[User query] --> B[Streamlit UI]
-    B --> C[Architecture selector]
+    B --> C[Baseline Agent]
+    C --> D[LLM-only response]
+    D --> E((Done))
+```
+
+### 2. Single Agent
+```mermaid
+flowchart TD
+    A[User query] --> B[Streamlit UI]
+    B --> C[Single Agent]
+    C --> D{Tool needed?}
+    D -->|Yes| E[Call selected financial tool]
+    D -->|No| H[Generate final answer]
+    E --> F[Observe tool output]
+    F --> G{Need another tool?}
+    G -->|Yes| E
+    G -->|No| H
+    H --> I((Done))
+```
+
+### 3. Multi-Agent System
+```mermaid
+flowchart TD
+    A[User query] --> B[Streamlit UI]
+    B --> C[Orchestrator]
     
-    C -->|Baseline| D[Baseline Agent]
-    C -->|Single Agent| E[Single Agent]
-    C -->|Multi-Agent| F[Orchestrator]
+    C --> D{Select needed domains}
+    D -->|Market| E[Market Agent]
+    D -->|Fundamentals| F[Fundamentals Agent]
+    D -->|Sentiment| G[Sentiment Agent]
     
-    %% Baseline Path
-    D --> D1[LLM-only response]
-    D1 --> D2((Done))
+    E --> H["Market tools<br>sector lookup, price performance,<br>market status, top movers, SQL"]
+    F --> I["Fundamentals tools<br>P/E ratio, EPS, market cap,<br>52-week range, SQL"]
+    G --> J["Sentiment tools<br>news headlines and sentiment scores"]
     
-    %% Single Agent Path
-    E --> E1{Tool needed?}
-    E1 -->|Yes| E2[Call selected financial tool]
-    E1 -->|No| E5[Generate final answer]
-    E2 --> E3[Observe tool output]
-    E3 --> E4{Need another tool?}
-    E4 -->|Yes| E2
-    E4 -->|No| E5
-    E5 --> E6((Done))
+    H --> K[Specialist results]
+    I --> K
+    J --> K
     
-    %% Multi-Agent Path
-    F --> F1{Select needed domains}
-    F1 -->|Market| F2[Market Agent]
-    F1 -->|Fundamentals| F3[Fundamentals Agent]
-    F1 -->|Sentiment| F4[Sentiment Agent]
-    
-    F2 --> F5["Market tools<br>sector lookup, price performance,<br>market status, top movers, SQL"]
-    F3 --> F6["Fundamentals tools<br>P/E ratio, EPS, market cap,<br>52-week range, SQL"]
-    F4 --> F7["Sentiment tools<br>news headlines and sentiment scores"]
-    
-    F5 --> F8[Specialist results]
-    F6 --> F8
-    F7 --> F8
-    
-    F8 --> F9[Synthesizer]
-    F9 --> F10[Final answer with confidence]
-    F10 --> F11((Done))
+    K --> L[Synthesizer]
+    L --> M[Final answer with confidence]
+    M --> N((Done))
 ```
 
 ## Why This Architecture Improves the System

@@ -12,7 +12,8 @@ MODEL_LARGE = "gpt-4o"
 ACTIVE_MODEL = MODEL_SMALL
 
 # Database
-DB_PATH = "stocks.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "stocks.db")
 
 # Initialize client
 client = OpenAI(

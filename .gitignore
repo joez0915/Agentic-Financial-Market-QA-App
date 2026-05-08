@@ -1,0 +1,11 @@
+# Ignore API keys and secrets
+API/
+*.env
+.env
+__pycache__/
+*.pyc
+
+# Ignore personal directories and archives
+MP2_P3/
+joez0915_haozez_MP3*
+*.zip

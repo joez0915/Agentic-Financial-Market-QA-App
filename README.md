@@ -48,62 +48,46 @@ The Synthesizer combines all specialist outputs into one final response. It pres
 
 ## 🗺️ Architectural Workflows
 
-### 1. Baseline Agent
-```mermaid
-flowchart LR
-    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
-    
-    A([User Query]) --> B[Baseline LLM]
-    B --> C([Final Answer])
-    
-    class A,C userNode;
-    class B agentNode;
-```
-
-### 2. Single Agent
-```mermaid
-flowchart LR
-    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
-
-    A([User Query]) --> B{Single LLM Agent}
-    B <-->|Tool Call / Return| C[(All 7 Financial Tools)]
-    B -->|Synthesizes| D([Final Answer])
-
-    class A,D userNode;
-    class B agentNode;
-    class C toolNode;
-```
-
-### 3. Multi-Agent System
 ```mermaid
 flowchart TD
-    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef systemNode fill:#2c3e50,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
-
-    A([User Query]) --> B{Orchestrator}
+    A[User query] --> B[Streamlit UI]
+    B --> C[Architecture selector]
     
-    B -->|Routes| C[Market Specialist]
-    B -->|Routes| D[Fundamentals Specialist]
-    B -->|Routes| E[Sentiment Specialist]
-
-    C <-->|Queries| F[(Tools & APIs)]
-    D <-->|Queries| F
-    E <-->|Queries| F
-
-    C --> G[Synthesizer]
-    D --> G
-    E --> G
-
-    G --> H([Final Answer])
-
-    class A,H userNode;
-    class B,C,D,E,G agentNode;
-    class F toolNode;
+    C -->|Baseline| D[Baseline Agent]
+    C -->|Single Agent| E[Single Agent]
+    C -->|Multi-Agent| F[Orchestrator]
+    
+    %% Baseline Path
+    D --> D1[LLM-only response]
+    D1 --> D2((Done))
+    
+    %% Single Agent Path
+    E --> E1{Tool needed?}
+    E1 -->|Yes| E2[Call selected financial tool]
+    E1 -->|No| E5[Generate final answer]
+    E2 --> E3[Observe tool output]
+    E3 --> E4{Need another tool?}
+    E4 -->|Yes| E2
+    E4 -->|No| E5
+    E5 --> E6((Done))
+    
+    %% Multi-Agent Path
+    F --> F1{Select needed domains}
+    F1 -->|Market| F2[Market Agent]
+    F1 -->|Fundamentals| F3[Fundamentals Agent]
+    F1 -->|Sentiment| F4[Sentiment Agent]
+    
+    F2 --> F5["Market tools<br>sector lookup, price performance,<br>market status, top movers, SQL"]
+    F3 --> F6["Fundamentals tools<br>P/E ratio, EPS, market cap,<br>52-week range, SQL"]
+    F4 --> F7["Sentiment tools<br>news headlines and sentiment scores"]
+    
+    F5 --> F8[Specialist results]
+    F6 --> F8
+    F7 --> F8
+    
+    F8 --> F9[Synthesizer]
+    F9 --> F10[Final answer with confidence]
+    F10 --> F11((Done))
 ```
 
 ## Why This Architecture Improves the System

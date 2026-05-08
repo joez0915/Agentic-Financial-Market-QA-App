@@ -44,68 +44,45 @@ The most advanced architecture, designed to optimize latency and accuracy by del
 The following diagram visualizes the flow of the **Multi-Agent Architecture**, highlighting how user prompts are processed, delegated, and ultimately synthesized.
 
 ```mermaid
-graph TD
-    %% Nodes
-    A([User Input Prompt])
-    B[Streamlit UI]
-    C{Orchestrator LLM}
-
-    %% Specialists
-    D[Market Specialist]
-    E[Fundamentals Specialist]
-    F[Sentiment Specialist]
-
-    %% Tools
-    T1[(SQLite DB)]
-    T2[yfinance API]
-
-    %% Synthesizer
-    G[Synthesizer LLM]
-    H([Final Formatted Answer])
-
-    %% Flow
-    A --> B
-    B -->|Selects Multi-Agent| C
+flowchart TD
+    A[User query] --> B[Streamlit UI]
+    B --> C[Architecture selector]
     
-    C -->|Routes to Domains| D
-    C -->|Routes to Domains| E
-    C -->|Routes to Domains| F
+    C -->|Baseline| D[Baseline Agent]
+    C -->|Single Agent| E[Single Agent]
+    C -->|Multi-Agent| F[Orchestrator]
     
-    %% Market Tool Connections
-    D -.->|get_market_status| T2
-    D -.->|get_price_performance| T2
-    D -.->|get_top_gainers_losers| T2
-    D -.->|query_local_db| T1
-    D -.->|get_tickers_by_sector| T1
-
-    %% Fundamentals Tool Connections
-    E -.->|get_company_overview| T2
-    E -.->|get_tickers_by_sector| T1
-    E -.->|query_local_db| T1
-
-    %% Sentiment Tool Connections
-    F -.->|get_news_sentiment| T2
-    F -.->|query_local_db| T1
-
-    %% Synthesis
-    D ==>|Market Context| G
-    E ==>|Fundamentals Context| G
-    F ==>|Sentiment Context| G
+    %% Baseline Path
+    D --> D1[LLM-only response]
+    D1 --> D2((Done))
     
-    G --> H
-
-    %% Styling
-    classDef userNode fill:#4a90e2,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef systemNode fill:#2c3e50,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef agentNode fill:#e67e22,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef toolNode fill:#27ae60,stroke:#fff,stroke-width:2px,color:#fff;
-    classDef outputNode fill:#8e44ad,stroke:#fff,stroke-width:2px,color:#fff;
-
-    class A userNode;
-    class B systemNode;
-    class C,D,E,F,G agentNode;
-    class T1,T2 toolNode;
-    class H outputNode;
+    %% Single Agent Path
+    E --> E1{Tool needed?}
+    E1 -->|Yes| E2[Call selected financial tool]
+    E1 -->|No| E5[Generate final answer]
+    E2 --> E3[Observe tool output]
+    E3 --> E4{Need another tool?}
+    E4 -->|Yes| E2
+    E4 -->|No| E5
+    E5 --> E6((Done))
+    
+    %% Multi-Agent Path
+    F --> F1{Select needed domains}
+    F1 -->|Market| F2[Market Agent]
+    F1 -->|Fundamentals| F3[Fundamentals Agent]
+    F1 -->|Sentiment| F4[Sentiment Agent]
+    
+    F2 --> F5["Market tools<br>sector lookup, price performance,<br>market status, top movers, SQL"]
+    F3 --> F6["Fundamentals tools<br>P/E ratio, EPS, market cap,<br>52-week range, SQL"]
+    F4 --> F7["Sentiment tools<br>news headlines and sentiment scores"]
+    
+    F5 --> F8[Specialist results]
+    F6 --> F8
+    F7 --> F8
+    
+    F8 --> F9[Synthesizer]
+    F9 --> F10[Final answer with confidence]
+    F10 --> F11((Done))
 ```
 
 ---
